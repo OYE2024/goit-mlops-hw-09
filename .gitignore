@@ -1,0 +1,33 @@
+# MLflow tracking
+mlruns/
+mlflow_local.db
+.mlflow
+
+# Model artifacts
+best_model/*
+!best_model/.gitkeep
+experiments/best_model/*
+!experiments/best_model/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+ENV/
+env/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+.terraform/

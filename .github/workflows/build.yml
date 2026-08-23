@@ -1,0 +1,86 @@
+name: Build and Push MLflow Docker Image
+
+# Коли запустити цей workflow
+on:
+  push:
+    # Запускається тільки коли змінилися файли що впливають на Docker образ
+    paths:
+      # Основні файли для сборки образу
+      - 'manifests/mlflow/Dockerfile'           # Docker образ
+      - 'experiments/requirements.txt'          # Python залежності
+      - 'experiments/train_and_push.py'         # Python код
+
+      # Для тестування самого workflow
+      - '.github/workflows/build.yml'
+
+    # Виключення - якщо тільки ці файли змінилися, workflow НЕ запускується
+    paths-ignore:
+      - 'README.md'                             # Документація
+      - '*.md'                                  # Усі markdown файли
+      - 'argocd/**'                             # ArgoCD конфіги (не впливають на образ)
+      - 'manifests/mlflow/namespace.yaml'       # K8s конфіги (не впливають на образ)
+      - 'manifests/mlflow/deployment.yaml'
+      - 'manifests/mlflow/service.yaml'
+      - 'manifests/mlflow/secret.yaml'
+
+    # Запускається тільки на цих гілках
+    branches:
+      - main
+      - develop
+
+# Дозволи для workflow
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Крок 1: Завантажити код з Git
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Крок 2: Підготувати Docker Buildx (для multi-platform builds)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # Крок 3: Залогіниться в GitHub Container Registry (GHCR)
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # Крок 4: Собрати Docker образ та запушити в GHCR
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        # Контекст білду (кореневої директорія проекту)
+        context: .
+
+        # Шлях до Dockerfile
+        file: manifests/mlflow/Dockerfile
+
+        # Запушити образ відразу (не тільки білувати локально)
+        push: true
+
+        # Два теги для образу:
+        # 1. ghcr.io/oye2024/mlflow:latest (завжди вказує на останню версію)
+        # 2. ghcr.io/oye2024/mlflow:<commit-sha> (для відслідження конкретної версії)
+        tags: |
+          ghcr.io/${{ github.repository_owner }}/mlflow:latest
+          ghcr.io/${{ github.repository_owner }}/mlflow:${{ github.sha }}
+
+        # Кешувати шари для прискорення подальших білдів
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    # Крок 5: Вивести інформацію про успіх
+    - name: Image build and push completed
+      run: |
+        echo "Docker образ успішно собран та запушений!"
+        echo "Latest: ghcr.io/${{ github.repository_owner }}/mlflow:latest"
+        echo "Commit: ghcr.io/${{ github.repository_owner }}/mlflow:${{ github.sha }}"

@@ -1,0 +1,82 @@
+# Argo CD Helm chart values (chart: argo-cd, repo: https://argoproj.github.io/argo-helm)
+# Assignment requirements: ClusterIP service, extraArgs, rbac, timeouts.
+
+global:
+  # Keep the footprint small on a t3.medium node group.
+  logging:
+    level: info
+
+## --- RBAC -----------------------------------------------------------------
+rbac:
+  create: true
+  # Default role for authenticated users; admins get full access via the
+  # built-in admin account.
+  policy.default: role:readonly
+  policy.csv: |
+    g, argocd-admins, role:admin
+  scopes: "[groups]"
+
+## --- Config / timeouts ----------------------------------------------------
+configs:
+  cm:
+    # How often Argo CD polls the Git repo when webhooks are not configured.
+    timeout.reconciliation: 180s
+    timeout.hard.reconciliation: 0s
+  params:
+    # Run the API server without TLS termination inside the pod; we reach it
+    # through kubectl port-forward, so plain HTTP behind ClusterIP is fine.
+    server.insecure: true
+
+## --- API server -----------------------------------------------------------
+server:
+  # Expose the UI/API as ClusterIP; access is via `kubectl port-forward`.
+  service:
+    type: ClusterIP
+  extraArgs:
+    - --insecure
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+## --- Controllers ----------------------------------------------------------
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+repoServer:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+applicationSet:
+  enabled: true
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+## --- Dependencies ---------------------------------------------------------
+dex:
+  enabled: false
+
+redis:
+  enabled: true
+
+notifications:
+  enabled: false

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mlops
+  annotations:
+    # ArgoCD Sync Wave: "-1" означає що цей ресурс буде створений ПЕРШИМ
+    # перед усіма іншими ресурсами (хвилі 0, 1, 2 тощо)
+    argocd.argoproj.io/sync-wave: "-1"

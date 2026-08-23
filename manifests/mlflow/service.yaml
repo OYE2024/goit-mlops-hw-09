@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+  namespace: mlops
+  labels:
+    app: mlflow
+  annotations:
+    # ArgoCD Sync Wave: "1" означає що цей ресурс буде створений ТРЕТІМ
+    # паралельно з Deployment (також хвиля 1)
+    # Обидва чекають поки Secret (хвиля 0) буде готовий
+    # Service зробить MLflow доступним за адресою mlflow.mlops.svc.cluster.local:5000
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: http
+  selector:
+    app: mlflow
