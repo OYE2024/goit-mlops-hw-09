@@ -6,28 +6,28 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://charts.bitnami.com/bitnami
-    targetRevision: 13.2.24
+    repoURL: https://charts.runix.io
+    targetRevision: 15.2.0
     chart: postgresql
     helm:
       values: |
-        auth:
-          username: mlflow
-          password: mlflow123
-          database: mlflow
-          postgresPassword: postgres123
-        primary:
-          persistence:
-            enabled: true
-            storageClass: gp2
-            size: 10Gi
-          resources:
-            requests:
-              cpu: 250m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+        global:
+          postgresql:
+            username: mlflow
+            password: mlflow123
+            database: mlflow
+            postgresPassword: postgres123
+        persistence:
+          enabled: true
+          storageClass: gp2
+          size: 10Gi
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
         service:
           type: ClusterIP
           port: 5432
