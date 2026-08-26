@@ -31,7 +31,7 @@ variable "argocd_chart_version" {
 variable "gitops_repo_url" {
   description = "HTTPS URL of the GitOps repository tracked by the ApplicationSet"
   type        = string
-  default     = "https://github.com/OYE2024/goit-mlops-lesson-9.git"
+  default     = "https://github.com/OYE2024/goit-mlops-hw-09.git"
 }
 
 variable "gitops_repo_revision" {

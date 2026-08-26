@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/OYE2024/goit-mlops-lesson-9
+    repoURL: https://github.com/OYE2024/goit-mlops-hw-09.git
     path: manifests/mlflow
     targetRevision: main
   destination:
