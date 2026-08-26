@@ -29,4 +29,4 @@ EXPOSE 5000
 
 # Runtime конфігурація приходить з Kubernetes env vars, тому один і той самий
 # образ можна використовувати в різних середовищах без rebuild.
-CMD ["sh", "-ec", "exec mlflow server --backend-store-uri \"$MLFLOW_BACKEND_STORE_URI\" --default-artifact-root \"$MLFLOW_ARTIFACT_ROOT\" --host \"${MLFLOW_HOST:-0.0.0.0}\" --port \"${MLFLOW_PORT:-5000}\""]
+CMD ["sh", "-ec", "exec mlflow server --backend-store-uri \"$MLFLOW_BACKEND_STORE_URI\" --default-artifact-root \"$MLFLOW_ARTIFACT_ROOT\" --host \"0.0.0.0\" --port \"5000\""]
