@@ -5,6 +5,10 @@ global:
   # Keep the footprint small on a t3.medium node group.
   logging:
     level: info
+  # argo-cd chart 10.x enables NetworkPolicies by default; keep the previous
+  # behavior unless you intentionally manage those policies.
+  networkPolicy:
+    create: false
 
 ## --- RBAC -----------------------------------------------------------------
 rbac:

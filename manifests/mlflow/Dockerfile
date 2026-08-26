@@ -25,13 +25,6 @@ RUN pip install --no-cache-dir \
 # ← Port 5000 для MLflow UI та API
 EXPOSE 5000
 
-# ← Default команда запуску MLflow Tracking Server:
-#   • --backend-store-uri: PostgreSQL база даних (метаінформація, метрики)
-#   • --default-artifact-root: S3 сховище (артефакти, моделі, параметри)
-#   • --host 0.0.0.0: доступний всередині K8s кластера
-#   • --port 5000: стандартний порт MLflow
-CMD ["mlflow", "server", \
-    "--backend-store-uri", "postgresql://mlflow:mlflow123@postgres.storage.svc.cluster.local:5432/mlflow", \
-    "--default-artifact-root", "s3://mlflow-artifacts", \
-    "--host", "0.0.0.0", \
-    "--port", "5000"]
+# ← Runtime конфігурація приходить з Kubernetes env vars, тому один і той самий
+#    образ можна використовувати в різних середовищах без rebuild.
+CMD ["sh", "-ec", "exec mlflow server --backend-store-uri \"$MLFLOW_BACKEND_STORE_URI\" --default-artifact-root \"$MLFLOW_ARTIFACT_ROOT\" --host \"${MLFLOW_HOST:-0.0.0.0}\" --port \"${MLFLOW_PORT:-5000}\""]

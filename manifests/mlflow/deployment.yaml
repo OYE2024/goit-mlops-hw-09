@@ -6,11 +6,9 @@ metadata:
   labels:
     app: mlflow
   annotations:
-    # ArgoCD Sync Wave: "1" означає що цей ресурс буде створений ТРЕТІМ
-    # після Namespace (хвиля -1) та Secret (хвиля 0)
-    # Це гарантує що Secret вже готовий коли Pod запускається
-    # Service (також хвиля 1) будуть створені паралельно з Deployment
-    argocd.argoproj.io/sync-wave: "1"
+    # ArgoCD Sync Wave: "2" означає що цей ресурс буде створений після
+    # Namespace, SecretStore і ExternalSecret.
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: 1
   selector:
@@ -23,7 +21,7 @@ spec:
     spec:
       containers:
       - name: mlflow
-        image: ghcr.io/oye2024/mlflow:latest
+        image: ghcr.io/oye2024/mlflow
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
@@ -49,6 +47,11 @@ spec:
             secretKeyRef:
               name: mlflow-secrets
               key: MLFLOW_BACKEND_STORE_URI
+        - name: MLFLOW_ARTIFACT_ROOT
+          valueFrom:
+            secretKeyRef:
+              name: mlflow-secrets
+              key: MLFLOW_ARTIFACT_ROOT
         resources:
           requests:
             cpu: 250m

@@ -6,11 +6,10 @@ metadata:
   labels:
     app: mlflow
   annotations:
-    # ArgoCD Sync Wave: "1" означає що цей ресурс буде створений ТРЕТІМ
-    # паралельно з Deployment (також хвиля 1)
-    # Обидва чекають поки Secret (хвиля 0) буде готовий
+    # ArgoCD Sync Wave: "2" означає що цей ресурс буде створений разом з
+    # Deployment після Namespace, SecretStore і ExternalSecret.
     # Service зробить MLflow доступним за адресою mlflow.mlops.svc.cluster.local:5000
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   type: ClusterIP
   ports:

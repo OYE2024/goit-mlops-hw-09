@@ -16,16 +16,22 @@ variable "argocd_namespace" {
   default     = "infra-tools"
 }
 
+variable "external_secrets_namespace" {
+  description = "Namespace where External Secrets Operator is installed"
+  type        = string
+  default     = "external-secrets"
+}
+
 variable "argocd_chart_version" {
   description = "Version of the argo-cd Helm chart (see https://artifacthub.io/packages/helm/argo/argo-cd)"
   type        = string
-  default     = "7.7.11"
+  default     = "10.4.0"
 }
 
 variable "gitops_repo_url" {
   description = "HTTPS URL of the GitOps repository tracked by the ApplicationSet"
   type        = string
-  default     = "https://github.com/OYE2024/goit-mlops-hw-09.git"
+  default     = "https://github.com/OYE2024/goit-mlops-lesson-9.git"
 }
 
 variable "gitops_repo_revision" {
@@ -35,9 +41,9 @@ variable "gitops_repo_revision" {
 }
 
 variable "gitops_repo_path" {
-  description = "Directory glob the ApplicationSet git generator scans (one Application per matched dir)"
+  description = "YAML glob the ApplicationSet git files generator scans (one Application per matched file)"
   type        = string
-  default     = "argocd/applications"
+  default     = "argocd/applications/*.yaml"
 }
 
 variable "tags" {

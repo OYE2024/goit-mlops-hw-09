@@ -7,8 +7,7 @@ on:
     paths:
       # Основні файли для сборки образу
       - 'manifests/mlflow/Dockerfile'           # Docker образ
-      - 'experiments/requirements.txt'          # Python залежності
-      - 'experiments/train_and_push.py'         # Python код
+      - 'manifests/mlflow/kustomization.yaml'   # GitOps image pin
 
       # Для тестування самого workflow
       - '.github/workflows/build.yml'
@@ -30,8 +29,11 @@ on:
 
 # Дозволи для workflow
 permissions:
-  contents: read
+  contents: write
   packages: write
+
+env:
+  IMAGE_REPOSITORY: ghcr.io/oye2024/mlflow
 
 jobs:
   build:
@@ -68,19 +70,30 @@ jobs:
         push: true
 
         # Два теги для образу:
-        # 1. ghcr.io/oye2024/mlflow:latest (завжди вказує на останню версію)
-        # 2. ghcr.io/oye2024/mlflow:<commit-sha> (для відслідження конкретної версії)
+        # 1. ghcr.io/oye2024/mlflow:latest (для ручної перевірки)
+        # 2. ghcr.io/oye2024/mlflow:<commit-sha> (immutabe tag для GitOps)
         tags: |
-          ghcr.io/${{ github.repository_owner }}/mlflow:latest
-          ghcr.io/${{ github.repository_owner }}/mlflow:${{ github.sha }}
+          ${{ env.IMAGE_REPOSITORY }}:latest
+          ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
 
         # Кешувати шари для прискорення подальших білдів
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    # Крок 5: Вивести інформацію про успіх
+    # Крок 5: Зафіксувати конкретний image tag у GitOps manifests
+    - name: Pin deployment image tag in Kustomize
+      run: |
+        sed -i "s/newTag: .*/newTag: ${{ github.sha }}/" manifests/mlflow/kustomization.yaml
+
+    - name: Commit pinned image tag
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "chore: pin mlflow image to ${{ github.sha }} [skip ci]"
+        file_pattern: manifests/mlflow/kustomization.yaml
+
+    # Крок 6: Вивести інформацію про успіх
     - name: Image build and push completed
       run: |
         echo "Docker образ успішно собран та запушений!"
-        echo "Latest: ghcr.io/${{ github.repository_owner }}/mlflow:latest"
-        echo "Commit: ghcr.io/${{ github.repository_owner }}/mlflow:${{ github.sha }}"
+        echo "Latest: ${{ env.IMAGE_REPOSITORY }}:latest"
+        echo "Commit: ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}"

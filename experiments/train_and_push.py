@@ -21,9 +21,12 @@ from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 PUSHGATEWAY_URL = os.getenv("PUSHGATEWAY_URL", "http://localhost:9091")
 EXPERIMENT_NAME = "iris-classification"
-BEST_MODEL_DIR = Path("best_model")
-BEST_MODEL_EXPERIMENTS_DIR = Path("experiments/best_model")
-MODEL_REGISTRY_DIR = BEST_MODEL_EXPERIMENTS_DIR / "MLmodel"
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+BEST_MODEL_DIR = PROJECT_ROOT / "best_model"
+EXPERIMENT_ARTIFACTS_DIR = SCRIPT_DIR / "best_model"
+ALL_RUNS_FILE = EXPERIMENT_ARTIFACTS_DIR / "all_runs.json"
+BEST_RUN_FILE = EXPERIMENT_ARTIFACTS_DIR / "best_run.json"
 
 # Hyperparameter configurations to test
 HYPERPARAMS = [
@@ -190,48 +193,48 @@ def save_best_model(best_run_info: Dict[str, Any]):
     run_id = best_run_info["run_id"]
     print(f"\n Saving best model (Run ID: {run_id})...")
 
-    # Create target directories
-    BEST_MODEL_DIR.mkdir(exist_ok=True)
-    BEST_MODEL_EXPERIMENTS_DIR.mkdir(parents=True, exist_ok=True)
+    # Recreate output directories so only the latest promoted model remains.
+    if BEST_MODEL_DIR.exists():
+        shutil.rmtree(BEST_MODEL_DIR)
+    if EXPERIMENT_ARTIFACTS_DIR.exists():
+        shutil.rmtree(EXPERIMENT_ARTIFACTS_DIR)
 
-    # Download model artifacts from MLflow
-    mlflow.artifacts.download_artifacts(
-        run_id=run_id,
-        dst_path=str(BEST_MODEL_EXPERIMENTS_DIR),
+    BEST_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    EXPERIMENT_ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Download only the logged model artifact for the best run.
+    downloaded_model_path = Path(
+        mlflow.artifacts.download_artifacts(
+            run_id=run_id,
+            artifact_path="model",
+            dst_path=str(EXPERIMENT_ARTIFACTS_DIR),
+        )
     )
 
-    print(f"  ✓ Model downloaded to: {BEST_MODEL_EXPERIMENTS_DIR}")
+    print(f"  ✓ Model downloaded to: {downloaded_model_path}")
 
-    # Copy to root best_model directory
-    if BEST_MODEL_EXPERIMENTS_DIR.exists():
-        for item in BEST_MODEL_EXPERIMENTS_DIR.iterdir():
-            target = BEST_MODEL_DIR / item.name
-            if item.is_dir():
-                if target.exists():
-                    shutil.rmtree(target)
-                shutil.copytree(item, target)
-            else:
-                shutil.copy2(item, target)
+    # Promote the best model to a stable project-level directory.
+    for item in downloaded_model_path.iterdir():
+        target = BEST_MODEL_DIR / item.name
+        if item.is_dir():
+            shutil.copytree(item, target)
+        else:
+            shutil.copy2(item, target)
 
-        print(f"  ✓ Model copied to: {BEST_MODEL_DIR}")
+    print(f"  ✓ Model copied to: {BEST_MODEL_DIR}")
 
 
 def save_run_metadata(experiment_results: Dict[str, Any]):
     """Save all runs and best run metadata as JSON."""
-    all_runs_file = Path("experiments/best_model/all_runs.json")
-    best_run_file = Path("experiments/best_model/best_run.json")
+    EXPERIMENT_ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    all_runs_file.parent.mkdir(parents=True, exist_ok=True)
-
-    # Save all runs
-    with open(all_runs_file, "w") as f:
+    with open(ALL_RUNS_FILE, "w") as f:
         json.dump(experiment_results["all_runs"], f, indent=2)
-    print(f"  ✓ All runs saved to: {all_runs_file}")
+    print(f"  ✓ All runs saved to: {ALL_RUNS_FILE}")
 
-    # Save best run
-    with open(best_run_file, "w") as f:
+    with open(BEST_RUN_FILE, "w") as f:
         json.dump(experiment_results["best_run"], f, indent=2)
-    print(f"  ✓ Best run saved to: {best_run_file}")
+    print(f"  ✓ Best run saved to: {BEST_RUN_FILE}")
 
 
 def print_summary(experiment_results: Dict[str, Any]):

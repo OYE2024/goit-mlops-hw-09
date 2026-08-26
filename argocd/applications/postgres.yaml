@@ -6,31 +6,27 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://charts.runix.io
-    targetRevision: 15.2.0
+    repoURL: registry-1.docker.io/bitnamicharts
+    targetRevision: 17.1.0
     chart: postgresql
     helm:
       values: |
-        global:
-          postgresql:
-            username: mlflow
-            password: mlflow123
-            database: mlflow
-            postgresPassword: postgres123
-        persistence:
-          enabled: true
-          storageClass: gp2
-          size: 10Gi
-        resources:
-          requests:
-            cpu: 250m
-            memory: 256Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
-        service:
-          type: ClusterIP
-          port: 5432
+        auth:
+          username: mlflow
+          database: mlflow
+          existingSecret: postgres-auth
+        primary:
+          persistence:
+            enabled: true
+            storageClass: gp2
+            size: 10Gi
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
   destination:
     server: https://kubernetes.default.svc
     namespace: storage

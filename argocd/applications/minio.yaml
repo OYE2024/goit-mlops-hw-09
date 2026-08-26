@@ -7,13 +7,11 @@ spec:
   project: default
   source:
     repoURL: https://charts.min.io/
-    targetRevision: 5.0.11
+    targetRevision: 5.4.0
     chart: minio
     helm:
       values: |
-        auth:
-          rootUser: minioadmin
-          rootPassword: minioadmin
+        existingSecret: minio-root-credentials
         replicas: 4
         buckets:
           - name: mlflow-artifacts
