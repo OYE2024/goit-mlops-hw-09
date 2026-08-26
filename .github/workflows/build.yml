@@ -2,30 +2,19 @@ name: Build and Push MLflow Docker Image
 
 # Коли запустити цей workflow
 on:
+  workflow_dispatch:
   push:
-    # Запускається тільки коли змінилися файли що впливають на Docker образ
-    paths:
-      # Основні файли для сборки образу
-      - 'manifests/mlflow/Dockerfile'           # Docker образ
-      - 'manifests/mlflow/kustomization.yaml'   # GitOps image pin
-
-      # Для тестування самого workflow
-      - '.github/workflows/build.yml'
-
-    # Виключення - якщо тільки ці файли змінилися, workflow НЕ запускується
-    paths-ignore:
-      - 'README.md'                             # Документація
-      - '*.md'                                  # Усі markdown файли
-      - 'argocd/**'                             # ArgoCD конфіги (не впливають на образ)
-      - 'manifests/mlflow/namespace.yaml'       # K8s конфіги (не впливають на образ)
-      - 'manifests/mlflow/deployment.yaml'
-      - 'manifests/mlflow/service.yaml'
-      - 'manifests/mlflow/secret.yaml'
-
     # Запускається тільки на цих гілках
     branches:
       - main
       - develop
+
+    # Не можна використовувати paths і paths-ignore одночасно для одного event.
+    # Тому тут залишаємо тільки include-патерни для файлів, які реально
+    # впливають на збірку або сам workflow.
+    paths:
+      - 'manifests/mlflow/Dockerfile'
+      - '.github/workflows/build.yml'
 
 # Дозволи для workflow
 permissions:
