@@ -1,6 +1,6 @@
 # MLOps Lesson-9
 
-Мінімальна інструкція для запуску `train_and_push.py`, перевірки сервісів і перегляду метрик.
+Інструкція для запуску `train_and_push.py`, перевірки сервісів і перегляду метрик.
 
 ## 1. Перевірка MLflow, PushGateway, Prometheus і Grafana у кластері
 
@@ -70,3 +70,21 @@ mlflow_loss{run_id=~".*"}
 - Директорія зі скриншотами: [docs](/Users/oie/goit/mlops/lesson-9/docs)
 - MLflow UI: додайте файл у `lesson-9/docs/`
 - Grafana Explore: додайте файл у `lesson-9/docs/`
+
+## 6. Infrastructure Details
+
+| Component | Value |
+|-----------|-------|
+| Region | eu-west-1 |
+| Base Infrastructure | AWS VPC + EKS from lesson-5 |
+| GitOps Controller | ArgoCD via Helm |
+| ArgoCD Namespace | infra-tools |
+| Application Namespace | mlops |
+| Storage Namespace | storage |
+| Monitoring Namespace | monitoring |
+| Artifact Storage | MinIO |
+| Metadata Storage | PostgreSQL |
+| Monitoring Stack | PushGateway + Prometheus + Grafana |
+| Storage Driver | AWS EBS CSI Driver via IRSA |
+| Secrets Integration | AWS Secrets Manager + External Secrets Operator |
+| State Backend | S3: mlops-tfstate-oie |
