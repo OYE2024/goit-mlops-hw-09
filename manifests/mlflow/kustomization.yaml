@@ -10,4 +10,4 @@ resources:
 
 images:
   - name: ghcr.io/oye2024/mlflow
-    newTag: 01eaf035fba84885cd5d175bb5d82cff410cf792
+    newTag: da41cd73e4f188884c65cf91bd484d28b9a5b71d
