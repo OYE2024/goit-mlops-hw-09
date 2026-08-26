@@ -30,7 +30,7 @@ spec:
             honor_labels: true
             static_configs:
               - targets:
-                  - pushgateway.monitoring.svc.cluster.local:9091
+                  - pushgateway-prometheus-pushgateway.monitoring.svc.cluster.local:9091
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
