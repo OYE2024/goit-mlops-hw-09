@@ -21,6 +21,7 @@ from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 PUSHGATEWAY_URL = os.getenv("PUSHGATEWAY_URL", "http://localhost:9091")
 EXPERIMENT_NAME = "iris-classification"
+REGISTERED_MODEL_NAME = "iris-classifier"
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 BEST_MODEL_DIR = PROJECT_ROOT / "best_model"
@@ -30,12 +31,12 @@ BEST_RUN_FILE = EXPERIMENT_ARTIFACTS_DIR / "best_run.json"
 
 # Hyperparameter configurations to test
 HYPERPARAMS = [
-    {"C": 0.1, "max_iter": 100, "solver": "lbfgs"},
-    {"C": 0.5, "max_iter": 200, "solver": "lbfgs"},
-    {"C": 1.0, "max_iter": 200, "solver": "lbfgs"},
-    {"C": 1.0, "max_iter": 300, "solver": "saga"},
-    {"C": 10.0, "max_iter": 200, "solver": "lbfgs"},
-    {"C": 10.0, "max_iter": 300, "solver": "saga"},
+    {"C": 0.1, "max_iter": 300, "solver": "lbfgs"},
+    {"C": 0.5, "max_iter": 300, "solver": "lbfgs"},
+    {"C": 1.0, "max_iter": 300, "solver": "lbfgs"},
+    {"C": 1.0, "max_iter": 300, "solver": "newton-cg"},
+    {"C": 5.0, "max_iter": 300, "solver": "newton-cg"},
+    {"C": 10.0, "max_iter": 300, "solver": "newton-cg"},
 ]
 
 
@@ -224,6 +225,27 @@ def save_best_model(best_run_info: Dict[str, Any]):
     print(f"  ✓ Model copied to: {BEST_MODEL_DIR}")
 
 
+def register_best_model(best_run_info: Dict[str, Any]):
+    """Register the best run model in MLflow Model Registry."""
+    if not best_run_info:
+        print("⚠ No best run found for model registration!")
+        return
+
+    run_id = best_run_info["run_id"]
+    model_uri = f"runs:/{run_id}/model"
+
+    print(f"\n Registering best model in MLflow Model Registry...")
+    print(f"  Model name: {REGISTERED_MODEL_NAME}")
+    print(f"  Source run: {run_id}")
+
+    model_version = mlflow.register_model(
+        model_uri=model_uri,
+        name=REGISTERED_MODEL_NAME,
+    )
+
+    print(f"  ✓ Registered model version: {model_version.version}")
+
+
 def save_run_metadata(experiment_results: Dict[str, Any]):
     """Save all runs and best run metadata as JSON."""
     EXPERIMENT_ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -271,6 +293,9 @@ def main():
 
     # Save best model
     save_best_model(results["best_run"])
+
+    # Register best model
+    register_best_model(results["best_run"])
 
     # Save metadata
     save_run_metadata(results)
