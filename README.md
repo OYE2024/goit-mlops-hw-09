@@ -2,7 +2,35 @@
 
 Інструкція для запуску `train_and_push.py`, перевірки сервісів і перегляду метрик.
 
-## 1. Перевірка MLflow, PushGateway, Prometheus і Grafana у кластері
+## 1. Порядок розгортання
+
+Спочатку потрібно розгорнути шар секретів, а вже після цього — GitOps applications через ArgoCD.
+
+Поточна схема така:
+
+1. `lesson-5`:
+   - VPC
+   - EKS
+   - AWS EBS CSI Driver
+2. `lesson-9 terraform apply`:
+   - AWS Secrets Manager secrets
+   - External Secrets Operator
+   - `SecretStore` / `ExternalSecret`
+   - ArgoCD
+   - ArgoCD ApplicationSet
+3. Після цього ArgoCD вже розгортає applications:
+   - MinIO
+   - PostgreSQL
+   - MLflow
+   - PushGateway
+   - Prometheus
+   - Grafana
+
+Причина:
+- `postgres`, `minio`, `mlflow` і `grafana` залежать від Kubernetes secrets, які створюються через External Secrets
+- якщо secrets ще не існують, applications або не стартують, або переходять у помилковий стан
+
+## 2. Перевірка MLflow, PushGateway, Prometheus і Grafana у кластері
 
 ```bash
 kubectl get applications -n infra-tools
@@ -21,7 +49,7 @@ kubectl get svc -n monitoring
 - PushGateway у кластері доступний за адресою `http://pushgateway.monitoring.svc.cluster.local:9091`
 - Prometheus у кластері доступний за адресою `http://prometheus-server.monitoring.svc.cluster.local`
 
-## 2. Port-forward
+## 3. Port-forward
 
 ```bash
 kubectl port-forward -n mlops svc/mlflow 5000:5000
@@ -30,7 +58,7 @@ kubectl port-forward -n monitoring svc/prometheus-server 9090:80
 kubectl port-forward -n monitoring svc/grafana 3000:3000
 ```
 
-## 3. Як запустити train_and_push.py
+## 4. Як запустити train_and_push.py
 
 ```bash
 cd lesson-9/experiments
@@ -50,7 +78,7 @@ python train_and_push.py
 - найкраща модель буде збережена в `lesson-9/best_model/`
 - метадані експериментів будуть у `lesson-9/experiments/best_model/`
 
-## 4. Як подивитись метрики в Grafana
+## 5. Як подивитись метрики в Grafana
 
 1. Відкрити Grafana: `http://localhost:3000`
 2. Перейти в `Explore`
@@ -65,13 +93,13 @@ mlflow_accuracy{run_id=~".*"}
 mlflow_loss{run_id=~".*"}
 ```
 
-## 5. Скриншоти
+## 6. Скриншоти
 
 - Директорія зі скриншотами: [docs](/Users/oie/goit/mlops/lesson-9/docs)
 - MLflow UI: додайте файл у `lesson-9/docs/`
 - Grafana Explore: додайте файл у `lesson-9/docs/`
 
-## 6. Infrastructure Details
+## 7. Infrastructure Details
 
 | Component | Value |
 |-----------|-------|
